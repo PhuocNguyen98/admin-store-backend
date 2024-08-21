@@ -81,9 +81,10 @@ const login = async (req, res) => {
       if (passwordMatch) {
         let staff_role = await getRole(existingUser.role_id);
         res.status(200).json({
-          staff_id: existingUser.staff_id,
-          staff_role,
-          access_token: generateAccessToken(existingUser.staff_id),
+          id: existingUser.staff_id,
+          username: existingUser.username,
+          role: staff_role,
+          token: generateAccessToken(existingUser.staff_id),
         });
       } else {
         res.status(401).json({
