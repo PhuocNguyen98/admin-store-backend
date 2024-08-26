@@ -1,5 +1,11 @@
-const { insertRecord } = require("../utils/sqlFunctions");
+const { getRecord, insertRecord } = require("../utils/sqlFunctions");
 const helper = require("../utils/helper");
+
+async function getCategory() {
+  const rows = await getRecord("*", "product_category", "id", "DESC");
+  const data = helper.emptyOrRows(rows);
+  return { data };
+}
 
 async function createCategory(req) {
   const { categoryName, categorySlug } = req.body;
@@ -21,5 +27,6 @@ async function createCategory(req) {
 }
 
 module.exports = {
+  getCategory,
   createCategory,
 };

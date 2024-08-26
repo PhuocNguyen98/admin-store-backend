@@ -15,6 +15,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use("/", authRoutes);
 app.use("/category", categoryRoutes);
 
+app.use(express.static("public/uploads/category/"));
+
 app.listen(port, () => {
   console.log(`Server running on port: ${port}`);
 });

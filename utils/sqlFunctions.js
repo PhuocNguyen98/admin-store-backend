@@ -26,6 +26,22 @@ async function insertRecord(tableName, record) {
   }
 }
 
+async function getRecord(
+  field = "*",
+  tableName,
+  order_by = "id",
+  sort = "ASC"
+) {
+  try {
+    const [results] = await pool.query(
+      `SELECT ${field} FROM ${tableName} ORDER BY ${order_by} ${sort} `
+    );
+    return results;
+  } catch (err) {
+    console.log(err);
+  }
+}
+
 async function getRole(roleId) {
   try {
     const [results] = await pool.query(
@@ -41,4 +57,5 @@ module.exports = {
   checkRecordExists,
   insertRecord,
   getRole,
+  getRecord,
 };
