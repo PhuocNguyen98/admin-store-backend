@@ -21,11 +21,7 @@ router.post(
   upload.single("categoryImage"),
   async function (req, res, next) {
     try {
-      if (req.file) {
-        res.json(await createCategory(req));
-      } else {
-        res.status(400).json({ error: "File not found !" });
-      }
+      res.json(await createCategory(req));
     } catch (error) {
       console.error(`Error while getting category`, err.message);
       next(err);

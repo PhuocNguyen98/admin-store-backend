@@ -3,7 +3,7 @@ const helper = require("../utils/helper");
 
 async function createCategory(req) {
   const { categoryName, categorySlug } = req.body;
-  const thumbnail = req.file.filename;
+  const thumbnail = req?.file?.filename;
   const category = {
     name: categoryName,
     slug: categorySlug,
