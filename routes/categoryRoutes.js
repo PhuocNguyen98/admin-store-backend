@@ -1,11 +1,13 @@
 const express = require("express");
 const { createCategory } = require("../controllers/categoryController");
 const router = express.Router();
+const path = require("path");
+let locationPath = path.join(__dirname, "../", "public", "uploads", "category");
 
 const multer = require("multer");
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    return cb(null, "../public/uploads/category");
+    return cb(null, locationPath);
   },
   filename: function (req, file, cb) {
     return cb(null, `${Date.now()}_${file.originalname}`);
