@@ -1,15 +1,41 @@
-const { getRecord, insertRecord } = require("../utils/sqlFunctions");
+const config = require("../db/config");
 const helper = require("../utils/helper");
+const {
+  getTotalRecord,
+  getRecord,
+  insertRecord,
+} = require("../utils/sqlFunctions");
 
-async function getCategory() {
-  const rows = await getRecord("*", "product_category", "id", "DESC");
+async function getCategory(req) {
+  const { order, sort, page = 1, limit = config.listPerPage } = req.query;
+
+  const totalRows = await getTotalRecord("product_category");
+  const totalPage = Math.round(totalRows / limit, 0);
+  const offset = helper.getOffSet(page, limit);
+
+  const rows = await getRecord(
+    "*",
+    "product_category",
+    order,
+    sort,
+    limit,
+    offset
+  );
+
   const data = helper.emptyOrRows(rows);
-  return { data };
+  const pagination = {
+    pageSize: +limit,
+    totalPage,
+    totalRows,
+  };
+
+  return { data, pagination };
 }
 
 async function createCategory(req) {
   const { categoryName, categorySlug } = req.body;
   const thumbnail = req?.file?.filename;
+
   const category = {
     name: categoryName,
     slug: categorySlug,
@@ -18,7 +44,6 @@ async function createCategory(req) {
   const result = await insertRecord("product_category", category);
 
   let message = "Error in creating Category";
-
   if (result.affectedRows) {
     message = "Category created successfully";
   }

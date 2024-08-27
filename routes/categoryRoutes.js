@@ -1,13 +1,13 @@
 const express = require("express");
+const router = express.Router();
+const multer = require("multer");
+const path = require("path");
 const {
   getCategory,
   createCategory,
 } = require("../controllers/categoryController");
-const router = express.Router();
-const path = require("path");
-let locationPath = path.join(__dirname, "../", "public", "uploads", "category");
 
-const multer = require("multer");
+let locationPath = path.join(__dirname, "../", "public", "uploads", "category");
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     return cb(null, locationPath);
@@ -16,12 +16,11 @@ const storage = multer.diskStorage({
     return cb(null, `${Date.now()}_${file.originalname}`);
   },
 });
-
 const upload = multer({ storage });
 
 router.get("/", async function (req, res, next) {
   try {
-    res.json(await getCategory());
+    res.json(await getCategory(req));
   } catch (error) {
     console.error(`Error while getting category`, err.message);
     next(err);
