@@ -1,7 +1,7 @@
 const mysql = require("mysql2/promise");
 const config = require("../db/config");
 const helper = require("./helper");
-const pool = mysql.createPool(config);
+const pool = mysql.createPool(config.db);
 
 async function checkRecordExists(tableName, column, value) {
   try {
@@ -30,15 +30,28 @@ async function getRecord(
   field = "*",
   tableName,
   order_by = "id",
-  sort = "ASC"
+  sort = "asc",
+  limit = config.listPerPage,
+  offset = 0
 ) {
   try {
     const [results] = await pool.query(
-      `SELECT ${field} FROM ${tableName} ORDER BY ${order_by} ${sort} `
+      `SELECT ${field} FROM ${tableName} ORDER BY ${order_by} ${sort} LIMIT ${offset},${limit} `
     );
     return results;
   } catch (err) {
     console.log(err);
+  }
+}
+
+async function getTotalRecord(table) {
+  try {
+    const [result] = await pool.query(
+      `SELECT COUNT(*) AS totalRecord FROM ${table}`
+    );
+    return result[0].totalRecord;
+  } catch (error) {
+    console.lof(error);
   }
 }
 
@@ -58,4 +71,5 @@ module.exports = {
   insertRecord,
   getRole,
   getRecord,
+  getTotalRecord,
 };
