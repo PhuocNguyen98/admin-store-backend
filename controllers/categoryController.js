@@ -7,24 +7,32 @@ const {
 } = require("../utils/sqlFunctions");
 
 async function getCategory(req) {
-  const { order, sort, page = 1, limit = config.listPerPage } = req.query;
+  const {
+    search = "",
+    order,
+    sort,
+    page = 1,
+    limit = config.listPerPage,
+  } = req.query;
 
-  const totalRows = await getTotalRecord("product_category");
-  const totalPage = Math.round(totalRows / limit, 0);
   const offset = helper.getOffSet(page, limit);
-
   const rows = await getRecord(
     "*",
     "product_category",
     order,
     sort,
     limit,
-    offset
+    offset,
+    (searchField = "name"),
+    (searchString = search)
   );
+
+  const totalRows = await getTotalRecord("product_category", "name", search);
+  const totalPage = Math.round(totalRows / limit, 0);
 
   const data = helper.emptyOrRows(rows);
   const pagination = {
-    pageSize: +limit,
+    rowsPerPage: +limit,
     totalPage,
     totalRows,
   };

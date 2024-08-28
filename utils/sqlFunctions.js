@@ -32,23 +32,32 @@ async function getRecord(
   order_by = "id",
   sort = "asc",
   limit = config.listPerPage,
-  offset = 0
+  offset = 0,
+  searchColumn,
+  searchString
 ) {
   try {
-    const [results] = await pool.query(
-      `SELECT ${field} FROM ${tableName} ORDER BY ${order_by} ${sort} LIMIT ${offset},${limit} `
-    );
+    let queryString = `SELECT ${field} FROM ${tableName}`;
+    if (searchColumn && searchString) {
+      queryString += ` WHERE ${searchColumn} LIKE '%${searchString}%' `;
+    }
+    queryString += ` ORDER BY ${order_by} ${sort} LIMIT ${offset},${limit} `;
+
+    const [results] = await pool.query(queryString);
     return results;
   } catch (err) {
     console.log(err);
   }
 }
 
-async function getTotalRecord(table) {
+async function getTotalRecord(table, column, value) {
   try {
-    const [result] = await pool.query(
-      `SELECT COUNT(*) AS totalRecord FROM ${table}`
-    );
+    let queryString = `SELECT COUNT(*) AS totalRecord FROM ${table}`;
+    if (column && value) {
+      queryString += ` WHERE ${column} LIKE '%${value}%'`;
+    }
+
+    const [result] = await pool.query(queryString);
     return result[0].totalRecord;
   } catch (error) {
     console.lof(error);
