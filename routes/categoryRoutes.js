@@ -5,6 +5,7 @@ const path = require("path");
 const {
   getCategory,
   createCategory,
+  getCategoryById,
 } = require("../controllers/categoryController");
 
 let locationPath = path.join(__dirname, "../", "public", "uploads", "category");
@@ -21,6 +22,15 @@ const upload = multer({ storage });
 router.get("/", async function (req, res, next) {
   try {
     res.json(await getCategory(req));
+  } catch (error) {
+    console.error(`Error while getting category`, err.message);
+    next(err);
+  }
+});
+
+router.get("/:id", async function (req, res, next) {
+  try {
+    res.json(await getCategoryById(req.params.id));
   } catch (error) {
     console.error(`Error while getting category`, err.message);
     next(err);

@@ -4,6 +4,7 @@ const {
   getTotalRecord,
   getRecord,
   insertRecord,
+  getRecordById,
 } = require("../utils/sqlFunctions");
 
 async function getCategory(req) {
@@ -40,6 +41,12 @@ async function getCategory(req) {
   return { data, pagination };
 }
 
+async function getCategoryById(id) {
+  const rows = await getRecordById("product_category", id);
+  const data = helper.emptyOrRows(rows);
+  return { data };
+}
+
 async function createCategory(req) {
   const { categoryName, categorySlug } = req.body;
   const thumbnail = req?.file?.filename;
@@ -62,4 +69,5 @@ async function createCategory(req) {
 module.exports = {
   getCategory,
   createCategory,
+  getCategoryById,
 };

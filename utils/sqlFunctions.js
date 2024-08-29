@@ -64,6 +64,16 @@ async function getTotalRecord(table, column, value) {
   }
 }
 
+async function getRecordById(table, value) {
+  try {
+    let queryString = `SELECT * FROM ${table} WHERE id = ${value}`;
+    const [result] = await pool.query(queryString);
+    return result;
+  } catch (error) {
+    console.lof(error);
+  }
+}
+
 async function getRole(roleId) {
   try {
     const [results] = await pool.query(
@@ -81,4 +91,5 @@ module.exports = {
   getRole,
   getRecord,
   getTotalRecord,
+  getRecordById,
 };
