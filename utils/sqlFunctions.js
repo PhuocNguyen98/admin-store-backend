@@ -37,7 +37,7 @@ async function getRecord(
   searchString
 ) {
   try {
-    let queryString = `SELECT ${field} FROM ${tableName}`;
+    let queryString = `SELECT ${field}, ROW_NUMBER() OVER (ORDER BY ${order_by} ${sort}) AS 'stt' FROM ${tableName}`;
     if (searchColumn && searchString) {
       queryString += ` WHERE ${searchColumn} LIKE '%${searchString}%' `;
     }
