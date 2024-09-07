@@ -1,10 +1,12 @@
-const config = require("../db/config");
+const mysql = require("mysql2/promise");
 const helper = require("../utils/helper");
+const config = require("../db/config");
 const {
   getTotalRecord,
   getRecord,
   insertRecord,
   getRecordById,
+  updateRecordById,
 } = require("../utils/sqlFunctions");
 
 async function getCategory(req) {
@@ -49,7 +51,7 @@ async function getCategoryById(id) {
 
 async function createCategory(req) {
   const { categoryName, categorySlug } = req.body;
-  const thumbnail = req?.file?.filename;
+  const thumbnail = req?.file?.path;
 
   const category = {
     name: categoryName,
@@ -66,8 +68,33 @@ async function createCategory(req) {
   return message;
 }
 
+async function updateCategoryById(id, req) {
+  const { categoryName, categorySlug, categoryStatus } = req.body;
+  const category = {
+    name: categoryName,
+    slug: categorySlug,
+    is_status: categoryStatus,
+    updated_at: helper.getTimes(),
+  };
+
+  console.log(req.file);
+
+  const thumbnail = req?.file?.path;
+  if (thumbnail) {
+    Object.assign(category, { thumbnail });
+  }
+
+  const result = await updateRecordById("product_category", category, id);
+  let message = "Error in updating Category";
+  if (result.affectedRows) {
+    message = "Category updated successfully";
+  }
+  return message;
+}
+
 module.exports = {
   getCategory,
   createCategory,
   getCategoryById,
+  updateCategoryById,
 };

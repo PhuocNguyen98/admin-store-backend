@@ -1,23 +1,14 @@
 const express = require("express");
 const router = express.Router();
-const multer = require("multer");
-const path = require("path");
 const {
   getCategory,
   createCategory,
   getCategoryById,
+  updateCategoryById,
 } = require("../controllers/categoryController");
 
-let locationPath = path.join(__dirname, "../", "public", "uploads", "category");
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    return cb(null, locationPath);
-  },
-  filename: function (req, file, cb) {
-    return cb(null, `${Date.now()}_${file.originalname}`);
-  },
-});
-const upload = multer({ storage });
+const uploadCloud = require("../configs/cloudinary.config");
+const upload = uploadCloud("category");
 
 router.get("/", async function (req, res, next) {
   try {
@@ -43,6 +34,19 @@ router.post(
   async function (req, res, next) {
     try {
       res.json(await createCategory(req));
+    } catch (error) {
+      console.error(`Error while getting category`, err.message);
+      next(err);
+    }
+  }
+);
+
+router.post(
+  "/:id",
+  upload.single("categoryImage"),
+  async function (req, res, next) {
+    try {
+      res.json(await updateCategoryById(req.params.id, req));
     } catch (error) {
       console.error(`Error while getting category`, err.message);
       next(err);

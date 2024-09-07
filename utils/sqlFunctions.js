@@ -60,7 +60,7 @@ async function getTotalRecord(table, column, value) {
     const [result] = await pool.query(queryString);
     return result[0].totalRecord;
   } catch (error) {
-    console.lof(error);
+    console.log(error);
   }
 }
 
@@ -70,7 +70,19 @@ async function getRecordById(table, value) {
     const [result] = await pool.query(queryString);
     return result;
   } catch (error) {
-    console.lof(error);
+    console.log(error);
+  }
+}
+
+async function updateRecordById(table, value, id) {
+  try {
+    const [results] = await pool.query(
+      `UPDATE ${table}  SET ? WHERE id = ${id}`,
+      [value]
+    );
+    return results;
+  } catch (error) {
+    console.log(error);
   }
 }
 
@@ -92,4 +104,5 @@ module.exports = {
   getRecord,
   getTotalRecord,
   getRecordById,
+  updateRecordById,
 };
