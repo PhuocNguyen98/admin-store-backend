@@ -5,7 +5,6 @@ const cors = require("cors");
 const port = process.env.PORT;
 const authRoutes = require("./routes/authRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
-
 const app = express();
 
 app.use(cors());
@@ -14,8 +13,6 @@ app.use(express.urlencoded({ extended: false }));
 
 app.use("/", authRoutes);
 app.use("/category", categoryRoutes);
-
-app.use(express.static("public/uploads/category/"));
 
 app.listen(port, () => {
   console.log(`Server running on port: ${port}`);
