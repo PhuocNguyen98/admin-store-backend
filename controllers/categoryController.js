@@ -74,9 +74,9 @@ const createCategory = async (req, res) => {
     if (result.affectedRows) {
       message = "Category created successfully";
     }
-    res.status(200).json({ message });
+    res.status(201).json({ message });
   } catch (error) {
-    res.status(500).json({ message });
+    res.status(500).json({ error: error.message });
   }
 };
 
@@ -108,7 +108,7 @@ const updateCategoryById = async (req, res) => {
       res.status(500).json({ message });
     }
   } else {
-    res.status(500).json({ message: `Error while getting category` });
+    res.status(500).json({ error: error.message });
   }
 };
 

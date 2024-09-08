@@ -4,7 +4,7 @@ const {
   getCategoryById,
   createCategory,
   updateCategoryById,
-} = require("../controllers/testController");
+} = require("../controllers/categoryController");
 const router = express.Router();
 
 const uploadCloud = require("../configs/cloudinary.config");
