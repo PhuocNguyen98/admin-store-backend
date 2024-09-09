@@ -7,7 +7,7 @@ const {
 } = require("../controllers/categoryController");
 const router = express.Router();
 
-const uploadCloud = require("../configs/cloudinary.config");
+const uploadCloud = require("../cloudinary/cloudinary");
 const upload = uploadCloud("category");
 
 router.get("/", getCategory);
