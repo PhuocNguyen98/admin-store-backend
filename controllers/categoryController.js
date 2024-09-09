@@ -1,6 +1,7 @@
 const mysql = require("mysql2/promise");
 const helper = require("../utils/helper");
 const config = require("../db/config");
+const cloudinary = require("../cloudinary/config");
 const {
   getTotalRecord,
   getRecord,
@@ -41,9 +42,11 @@ const getCategory = async (req, res) => {
       totalRows,
     };
 
-    res.status(200).json({ data, pagination });
+    res.status(200).json({ status: 200, data, pagination });
   } catch (error) {
-    res.status(500).json({ message: `Error while getting category` });
+    res
+      .status(500)
+      .json({ status: 500, message: `Error while getting category` });
   }
 };
 
@@ -53,62 +56,90 @@ const getCategoryById = async (req, res) => {
     const rows = await getRecordById("product_category", id);
     const data = helper.emptyOrRows(rows);
 
-    res.status(200).json({ data });
+    res.status(200).json({ status: 200, data });
   } else {
-    res.status(500).json({ message: `Error while getting category` });
+    res
+      .status(500)
+      .json({ status: 500, message: `Error while getting category` });
   }
 };
 
 const createCategory = async (req, res) => {
-  const { categoryName, categorySlug } = req.body;
-  const thumbnail = req?.file?.path;
-
-  const category = {
-    name: categoryName,
-    slug: categorySlug,
-    thumbnail,
+  const { categoryName: name, categorySlug: slug } = req.body;
+  let newCategory = {
+    name,
+    slug,
+    created_at: helper.getTimes(),
   };
   let message = "Error in creating Category";
+
   try {
-    const result = await insertRecord("product_category", category);
+    if (req.file) {
+      newCategory = {
+        ...newCategory,
+        thumbnail: req.file.path,
+        cloudinary_id: req.file.filename,
+      };
+    }
+
+    const result = await insertRecord("product_category", newCategory);
     if (result.affectedRows) {
       message = "Category created successfully";
     }
-    res.status(201).json({ message });
+    res.status(200).json({ status: 200, message });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ status: 500, error: error.message });
   }
 };
 
 const updateCategoryById = async (req, res) => {
   const id = req.params.id;
-  const { categoryName, categorySlug, categoryStatus } = req.body;
-  const category = {
-    name: categoryName,
-    slug: categorySlug,
-    is_status: categoryStatus,
-    updated_at: helper.getTimes(),
-  };
-
-  const thumbnail = req?.file?.path;
-  if (thumbnail) {
-    Object.assign(category, { thumbnail });
-  }
+  let message = "Error in updating Category";
 
   if (id) {
-    let message = "Error in updating Category";
+    const {
+      categoryName: name,
+      categorySlug: slug,
+      categoryStatus: is_status,
+    } = req.body;
+    let newCategory = {
+      name,
+      slug,
+      is_status,
+      updated_at: helper.getTimes(),
+    };
+
     try {
-      const result = await updateRecordById("product_category", category, id);
+      if (req.file) {
+        const rows = await getRecordById("product_category", id);
+        const category = helper.emptyOrRows(rows);
+
+        if (category[0].thumbnail && category[0].cloudinary_id) {
+          await cloudinary.uploader.destroy(category[0].cloudinary_id);
+        }
+
+        newCategory = {
+          ...newCategory,
+          thumbnail: req.file.path,
+          cloudinary_id: req.file.filename,
+        };
+      }
+
+      const result = await updateRecordById(
+        "product_category",
+        newCategory,
+        id
+      );
       if (result.affectedRows) {
         message = "Category updated successfully";
       }
-
-      res.status(200).json({ message });
+      res.status(200).json({ status: 200, message });
     } catch (error) {
-      res.status(500).json({ message });
+      res.status(500).json({ status: 500, message });
     }
   } else {
-    res.status(500).json({ error: error.message });
+    message = "Can not found category";
+    res.status(500).json({ status: 500, message });
   }
 };
 
