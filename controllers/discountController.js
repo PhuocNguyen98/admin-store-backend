@@ -7,6 +7,7 @@ const {
   getRecordById,
   insertRecord,
   updateRecordById,
+  checkRecordExists,
 } = require("../utils/sqlFunctions");
 const dayjs = require("dayjs");
 
@@ -157,9 +158,62 @@ const updateDiscountById = async (req, res) => {
   }
 };
 
+const updateDiscountStatusById = async (req, res) => {
+  const data = req.body?.formList;
+  if (data.length > 0) {
+    let message = "Error in updating status Discount";
+    let isUpdate = 0;
+
+    for (let i = 0; i < data.length; i++) {
+      let is_status = data[i]?.is_status;
+      let id = data[i]?.id;
+      try {
+        const discount = await checkRecordExists("discount", "id", id);
+        // Check discount exist
+        if (Object.keys(discount).length > 0) {
+          // Check is_status old AND is_status new
+          if (discount.is_status === +is_status) {
+            continue;
+          } else {
+            let discountStatus = {
+              is_status,
+            };
+            const result = await updateRecordById(
+              "discount",
+              discountStatus,
+              id
+            );
+            if (result.affectedRows) {
+              isUpdate = isUpdate + 1;
+            }
+          }
+        } else {
+          message = "Discount not exist";
+          res.status(500).json({ status: 500, message });
+          break;
+        }
+      } catch (error) {
+        res.status(500).json({ status: 500, error: error.message });
+      }
+    }
+
+    if (isUpdate > 0) {
+      message = "Discount updated successfully";
+      res.status(200).json({ status: 200, message });
+    } else {
+      message = "No changes detected";
+      res.status(200).json({ status: 200, message });
+    }
+  } else {
+    message = "Error while update status discount";
+    res.status(500).json({ status: 500, message });
+  }
+};
+
 module.exports = {
   getDiscount,
   getDiscountById,
   createDiscount,
   updateDiscountById,
+  updateDiscountStatusById,
 };

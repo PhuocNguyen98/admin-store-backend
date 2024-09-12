@@ -4,6 +4,7 @@ const {
   getDiscountById,
   createDiscount,
   updateDiscountById,
+  updateDiscountStatusById,
 } = require("../controllers/discountController");
 const router = express.Router();
 
@@ -14,5 +15,6 @@ router.get("/", getDiscount);
 router.get("/:id", getDiscountById);
 router.post("/", upload.single("discountImage"), createDiscount);
 router.post("/:id", upload.single("discountImage"), updateDiscountById);
+router.put("/", updateDiscountStatusById);
 
 module.exports = router;
