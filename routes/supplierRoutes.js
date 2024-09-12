@@ -13,6 +13,6 @@ const upload = uploadCloud("supplier");
 router.get("/", getSupplier);
 router.get("/:id", getSupplierById);
 router.post("/", upload.single("supplierImage"), createSupplier);
-router.post("/:id", upload.single("supplierImage"), updateSupplierById);
+router.put("/:id", upload.single("supplierImage"), updateSupplierById);
 
 module.exports = router;

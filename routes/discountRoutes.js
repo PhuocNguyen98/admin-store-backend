@@ -14,7 +14,7 @@ const upload = uploadCloud("discount");
 router.get("/", getDiscount);
 router.get("/:id", getDiscountById);
 router.post("/", upload.single("discountImage"), createDiscount);
-router.post("/:id", upload.single("discountImage"), updateDiscountById);
+router.put("/:id", upload.single("discountImage"), updateDiscountById);
 router.put("/", updateDiscountStatusById);
 
 module.exports = router;
