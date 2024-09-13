@@ -8,46 +8,64 @@ const {
   insertRecord,
   updateRecordById,
   checkRecordExists,
+  getAllRecord,
 } = require("../utils/sqlFunctions");
 const dayjs = require("dayjs");
 
 const getDiscount = async (req, res) => {
-  const {
-    search = "",
-    order,
-    sort,
-    page = 1,
-    limit = config.listPerPage,
-  } = req.query;
-  const offset = helper.getOffSet(page, limit);
-
-  try {
-    const rows = await getRecord(
-      "*",
-      "discount",
+  const params = req.query;
+  if (Object.keys(params).length > 0) {
+    const {
+      search = "",
       order,
       sort,
-      limit,
-      offset,
-      (searchField = "name"),
-      (searchString = search)
-    );
+      page = 1,
+      limit = config.listPerPage,
+    } = params;
+    const offset = helper.getOffSet(page, limit);
 
-    const totalRows = await getTotalRecord("discount", "name", search);
-    const totalPage = Math.round(totalRows / limit, 0);
+    try {
+      const rows = await getRecord(
+        "*",
+        "discount",
+        order,
+        sort,
+        limit,
+        offset,
+        (searchField = "name"),
+        (searchString = search)
+      );
 
-    const data = helper.emptyOrRows(rows);
-    const pagination = {
-      rowsPerPage: +limit,
-      totalPage,
-      totalRows,
-    };
+      const totalRows = await getTotalRecord("discount", "name", search);
+      const totalPage = Math.round(totalRows / limit, 0);
 
-    res.status(200).json({ status: 200, data, pagination });
-  } catch (error) {
-    res
-      .status(500)
-      .json({ status: 500, message: `Error while getting discount` });
+      const data = helper.emptyOrRows(rows);
+      const pagination = {
+        rowsPerPage: +limit,
+        totalPage,
+        totalRows,
+      };
+
+      res.status(200).json({ status: 200, data, pagination });
+    } catch (error) {
+      res
+        .status(500)
+        .json({ status: 500, message: `Error while getting discount` });
+    }
+  } else {
+    try {
+      const rows = await getAllRecord(
+        "id as value , CONCAT (name,' - giảm tối đa ', percent, '%') as title ",
+        "discount",
+        "is_status = 1"
+      );
+      const data = helper.emptyOrRows(rows);
+      res.status(200).json({ status: 200, data });
+    } catch (error) {
+      res
+        .status(500)
+        .json({ status: 500, message: `Error while getting discount` });
+    }
   }
 };
 

@@ -1,5 +1,7 @@
-const helper = require("../utils/helper");
+const mysql = require("mysql2/promise");
 const config = require("../db/config");
+const pool = mysql.createPool(config.db);
+const helper = require("../utils/helper");
 const cloudinary = require("../cloudinary/config");
 const {
   getTotalRecord,
@@ -7,45 +9,66 @@ const {
   getRecordById,
   insertRecord,
   updateRecordById,
+  getAllRecord,
 } = require("../utils/sqlFunctions");
+const { query } = require("express");
 
 const getSupplier = async (req, res) => {
-  const {
-    search = "",
-    order,
-    sort,
-    page = 1,
-    limit = config.listPerPage,
-  } = req.query;
-  const offset = helper.getOffSet(page, limit);
-
-  try {
-    const rows = await getRecord(
-      "*",
-      "product_supplier",
+  const params = req.query;
+  if (Object.keys(params).length > 0) {
+    const {
+      search = "",
       order,
       sort,
-      limit,
-      offset,
-      (searchField = "name"),
-      (searchString = search)
-    );
+      page = 1,
+      limit = config.listPerPage,
+    } = params;
+    const offset = helper.getOffSet(page, limit);
+    try {
+      const rows = await getRecord(
+        "*",
+        "product_supplier",
+        order,
+        sort,
+        limit,
+        offset,
+        (searchField = "name"),
+        (searchString = search)
+      );
 
-    const totalRows = await getTotalRecord("product_supplier", "name", search);
-    const totalPage = Math.round(totalRows / limit, 0);
+      const totalRows = await getTotalRecord(
+        "product_supplier",
+        "name",
+        search
+      );
+      const totalPage = Math.round(totalRows / limit, 0);
 
-    const data = helper.emptyOrRows(rows);
-    const pagination = {
-      rowsPerPage: +limit,
-      totalPage,
-      totalRows,
-    };
+      const data = helper.emptyOrRows(rows);
+      const pagination = {
+        rowsPerPage: +limit,
+        totalPage,
+        totalRows,
+      };
 
-    res.status(200).json({ status: 200, data, pagination });
-  } catch (error) {
-    res
-      .status(500)
-      .json({ status: 500, message: `Error while getting supplier` });
+      res.status(200).json({ status: 200, data, pagination });
+    } catch (error) {
+      res
+        .status(500)
+        .json({ status: 500, message: `Error while getting supplier` });
+    }
+  } else {
+    try {
+      const rows = await getAllRecord(
+        "id as value , name as title ",
+        "product_supplier"
+      );
+      const data = helper.emptyOrRows(rows);
+      res.status(200).json({ status: 200, data });
+    } catch (error) {
+      res
+        .status(500)
+        .json({ status: 500, message: `Error while getting supplier` });
+    }
   }
 };
 

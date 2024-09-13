@@ -64,6 +64,19 @@ async function getTotalRecord(table, column, value) {
   }
 }
 
+async function getAllRecord(field, tableName, conditions) {
+  try {
+    let queryString = `SELECT ${field} FROM ${tableName}`;
+    if (conditions) {
+      queryString += ` WHERE ${conditions}`;
+    }
+    const [results] = await pool.query(queryString);
+    return results;
+  } catch (error) {
+    console.log(err);
+  }
+}
+
 async function getRecordById(table, value) {
   try {
     let queryString = `SELECT * FROM ${table} WHERE id = ${value}`;
@@ -105,4 +118,5 @@ module.exports = {
   getTotalRecord,
   getRecordById,
   updateRecordById,
+  getAllRecord,
 };

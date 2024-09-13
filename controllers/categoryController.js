@@ -8,45 +8,66 @@ const {
   getRecordById,
   insertRecord,
   updateRecordById,
+  getAllRecord,
 } = require("../utils/sqlFunctions");
 
 const getCategory = async (req, res) => {
-  const {
-    search = "",
-    order,
-    sort,
-    page = 1,
-    limit = config.listPerPage,
-  } = req.query;
-  const offset = helper.getOffSet(page, limit);
-
-  try {
-    const rows = await getRecord(
-      "*",
-      "product_category",
+  const params = req.query;
+  if (Object.keys(params).length > 0) {
+    const {
+      search = "",
       order,
       sort,
-      limit,
-      offset,
-      (searchField = "name"),
-      (searchString = search)
-    );
+      page = 1,
+      limit = config.listPerPage,
+    } = params;
+    const offset = helper.getOffSet(page, limit);
 
-    const totalRows = await getTotalRecord("product_category", "name", search);
-    const totalPage = Math.round(totalRows / limit, 0);
+    try {
+      const rows = await getRecord(
+        "*",
+        "product_category",
+        order,
+        sort,
+        limit,
+        offset,
+        (searchField = "name"),
+        (searchString = search)
+      );
 
-    const data = helper.emptyOrRows(rows);
-    const pagination = {
-      rowsPerPage: +limit,
-      totalPage,
-      totalRows,
-    };
+      const totalRows = await getTotalRecord(
+        "product_category",
+        "name",
+        search
+      );
+      const totalPage = Math.round(totalRows / limit, 0);
 
-    res.status(200).json({ status: 200, data, pagination });
-  } catch (error) {
-    res
-      .status(500)
-      .json({ status: 500, message: `Error while getting category` });
+      const data = helper.emptyOrRows(rows);
+      const pagination = {
+        rowsPerPage: +limit,
+        totalPage,
+        totalRows,
+      };
+
+      res.status(200).json({ status: 200, data, pagination });
+    } catch (error) {
+      res
+        .status(500)
+        .json({ status: 500, message: `Error while getting category` });
+    }
+  } else {
+    try {
+      const rows = await getAllRecord(
+        "id as value , name as title ",
+        "product_category"
+      );
+      const data = helper.emptyOrRows(rows);
+      res.status(200).json({ status: 200, data });
+    } catch (error) {
+      res
+        .status(500)
+        .json({ status: 500, message: `Error while getting category` });
+    }
   }
 };
 
