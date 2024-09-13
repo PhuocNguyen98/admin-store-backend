@@ -9,6 +9,7 @@ const authRoutes = require("./routes/authRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
 const supplierRoutes = require("./routes/supplierRoutes");
 const discountRoutes = require("./routes/discountRoutes");
+const productRoutes = require("./routes/productRoutes");
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.use("/", authRoutes);
 app.use("/category", categoryRoutes);
 app.use("/supplier", supplierRoutes);
 app.use("/discount", discountRoutes);
+app.use("/product", productRoutes);
 
 app.listen(port, () => {
   console.log(`Server running on port: ${port}`);
