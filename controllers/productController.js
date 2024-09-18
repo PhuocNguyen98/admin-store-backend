@@ -124,6 +124,8 @@ const createProduct = async (req, res) => {
     discount_id,
     specifications,
     description,
+    is_status: 1, //{0: Ngừng kinh doanh | 1: Đang kinh doanh} => Mặc định khi tạo mới sản phẩm sẽ là 1
+    is_display: 0, // { 0: Không hiển thị | 1: Đang hiển thị}  => Mặc định khi tạo mới sản phẩm sẽ là 0
     created_at: helper.getTimes(),
   };
 
@@ -181,6 +183,8 @@ const updateProductById = async (req, res) => {
           productDiscount: discount_id,
           productSpecifications: specifications,
           productDescription: description,
+          productStatus: is_status,
+          productDisplay: is_display,
           productImages,
         } = req.body;
 
@@ -195,6 +199,8 @@ const updateProductById = async (req, res) => {
           discount_id,
           specifications,
           description,
+          is_status,
+          is_display,
           updated_at: helper.getTimes(),
         };
 
