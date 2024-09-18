@@ -1,10 +1,22 @@
 const express = require("express");
-const { getProduct } = require("../controllers/productController");
+const {
+  getProduct,
+  createProduct,
+  getProductById,
+  updateProductById,
+} = require("../controllers/productController");
 const router = express.Router();
 
 const uploadCloud = require("../cloudinary/cloudinary");
-const upload = uploadCloud("supplier");
+const upload = uploadCloud("product", true);
+const cpUpload = upload.fields([
+  { name: "productThumbnail", maxCount: 1 },
+  { name: "productImages", maxCount: 20 },
+]);
 
 router.get("/", getProduct);
+router.get("/:id", getProductById);
+router.post("/", cpUpload, createProduct);
+router.put("/:id", cpUpload, updateProductById);
 
 module.exports = router;
