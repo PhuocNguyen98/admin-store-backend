@@ -4,6 +4,7 @@ const {
   createProduct,
   getProductById,
   updateProductById,
+  quickUpdateProduct,
 } = require("../controllers/productController");
 const router = express.Router();
 
@@ -18,5 +19,6 @@ router.get("/", getProduct);
 router.get("/:id", getProductById);
 router.post("/", cpUpload, createProduct);
 router.put("/:id", cpUpload, updateProductById);
+router.put("/", quickUpdateProduct);
 
 module.exports = router;

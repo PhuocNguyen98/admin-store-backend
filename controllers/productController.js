@@ -8,6 +8,7 @@ const {
   insertRecord,
   updateRecordById,
   checkRecordExists,
+  getRecordV2,
 } = require("../utils/sqlFunctions");
 
 function handleArrayImages(arrayImages) {
@@ -26,7 +27,7 @@ function handleArrayImages(arrayImages) {
 }
 
 const getProduct = async (req, res) => {
-  const {
+  let {
     search = "",
     order,
     sort,
@@ -34,18 +35,25 @@ const getProduct = async (req, res) => {
     limit = config.listPerPage,
   } = req.query;
   const offset = helper.getOffSet(page, limit);
-
   try {
-    const rows = await getRecord(
-      "*",
-      "product",
-      order,
+    let fields = `product.id, product.name, product.price,product.inventory, product.thumbnail,product.is_status,product.is_display,
+    product_category.name as category,product_supplier.name as supplier`;
+
+    let productQuery = {
+      fields,
+      tableName: "product",
+      order_by: order ? order : "product.id",
       sort,
       limit,
       offset,
-      (searchField = "name"),
-      (searchString = search)
-    );
+      searchColumn: "product.name",
+      searchString: search,
+      joinTable: `inner join product_category on product.category_id = product_category.id 
+      inner join product_supplier on product.supplier_id = product_supplier.id`,
+    };
+
+    const rows = await getRecordV2(productQuery);
+    // console.log(rows);
 
     const totalRows = await getTotalRecord("product", "name", search);
     const totalPage = Math.round(totalRows / limit, 0);
@@ -329,9 +337,56 @@ const updateProductById = async (req, res) => {
   }
 };
 
+const quickUpdateProduct = async (req, res) => {
+  const data = req.body?.formList;
+  if (data.length > 0) {
+    let message = "Error in updating status Discount";
+    let isUpdate = 0;
+
+    for (let i = 0; i < data.length; i++) {
+      let id = data[i]?.id;
+      let is_status = data[i]?.is_status;
+      let is_display = data[i]?.is_display;
+
+      try {
+        let product = await checkRecordExists("product", "id", id);
+        if (Object.keys(product).length > 0) {
+          let newProduct = {};
+          if (product.is_status !== is_status) {
+            newProduct = { is_status };
+          }
+          if (product.is_display !== is_display) {
+            newProduct = { ...newProduct, is_display };
+          }
+
+          if (Object.keys(newProduct).length > 0) {
+            let result = await updateRecordById("product", newProduct, id);
+            if (result.affectedRows) {
+              isUpdate += 1;
+            }
+          }
+        }
+      } catch (error) {
+        res.status(500).json({ status: 500, message });
+      }
+    }
+    if (isUpdate > 0) {
+      message = "Product updated successfully";
+      res.status(200).json({ status: 200, message });
+    } else {
+      message = "No changes detected";
+      res.status(200).json({ status: 200, message, flag: true });
+    }
+  } else {
+    message = "Error while update status discount";
+    res.status(500).json({ status: 500, message });
+  }
+};
+
 module.exports = {
   getProduct,
   createProduct,
   getProductById,
   updateProductById,
+  quickUpdateProduct,
 };
