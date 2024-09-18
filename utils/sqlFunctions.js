@@ -34,14 +34,66 @@ async function getRecord(
   limit = config.listPerPage,
   offset = 0,
   searchColumn,
-  searchString
+  searchString,
+  conditions,
+  joinTable
 ) {
   try {
     let queryString = `SELECT ${field}, ROW_NUMBER() OVER (ORDER BY ${order_by} ${sort}) AS 'stt' FROM ${tableName}`;
-    if (searchColumn && searchString) {
-      queryString += ` WHERE ${searchColumn} LIKE '%${searchString}%' `;
+    if (joinTable) {
+      queryString += ` ${joinTable}`;
     }
+    if (conditions) {
+      queryString += ` WHERE ${conditions}`;
+      if (searchColumn && searchString) {
+        queryString += ` AND ${searchColumn} LIKE '%${searchString}%' `;
+      }
+    } else {
+      if (searchColumn && searchString) {
+        queryString += ` WHERE ${searchColumn} LIKE '%${searchString}%' `;
+      }
+    }
+
     queryString += ` ORDER BY ${order_by} ${sort} LIMIT ${offset},${limit} `;
+    // console.log(queryString);
+
+    const [results] = await pool.query(queryString);
+    return results;
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+async function getRecordV2({
+  fields = "*",
+  tableName,
+  joinTable,
+  order_by = "id",
+  sort = "asc",
+  limit = config.listPerPage,
+  offset = 0,
+  searchColumn,
+  searchString,
+  conditions,
+}) {
+  try {
+    let queryString = `SELECT ${fields}, ROW_NUMBER() OVER (ORDER BY ${order_by} ${sort}) AS 'stt' FROM ${tableName}`;
+    if (joinTable) {
+      queryString += ` ${joinTable}`;
+    }
+    if (conditions) {
+      queryString += ` WHERE ${conditions}`;
+      if (searchColumn && searchString) {
+        queryString += ` AND ${searchColumn} LIKE '%${searchString}%' `;
+      }
+    } else {
+      if (searchColumn && searchString) {
+        queryString += ` WHERE ${searchColumn} LIKE '%${searchString}%' `;
+      }
+    }
+
+    queryString += ` ORDER BY ${order_by} ${sort} LIMIT ${offset},${limit} `;
+    // console.log(queryString);
 
     const [results] = await pool.query(queryString);
     return results;
@@ -119,4 +171,5 @@ module.exports = {
   getRecordById,
   updateRecordById,
   getAllRecord,
+  getRecordV2,
 };
