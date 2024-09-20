@@ -29,7 +29,7 @@ const getStaff = async (req, res) => {
     const offset = helper.getOffSet(page, limit);
     try {
       let queryString = {
-        fields: `staff.username, staff.email, staff_role.name as role`,
+        fields: `staff.id,staff.username,staff.email,staff.role_id, staff.password,staff.is_active,staff.created_at, staff_role.name as role`,
         tableName: "staff",
         joinTable: `inner join staff_role on staff.role_id = staff_role.id `,
         order_by: order ? `staff.${order}` : "staff.id",
@@ -104,11 +104,20 @@ const createStaff = async (req, res) => {
         .status(409)
         .json({ status: 409, message: "Username staff already exists" });
     } else {
+      let data;
       const result = await insertRecord("staff", newStaff);
       if (result.affectedRows) {
+        let queryString = {
+          fields: `staff.username, staff.email,staff.role_id, staff_role.name as role`,
+          tableName: "staff",
+          joinTable: `inner join staff_role on staff.role_id = staff_role.id `,
+          order_by: "staff.id",
+          conditions: `staff.id =${result.insertId} `,
+        };
+        data = await getRecordV2(queryString);
         message = "Staff created successfully";
       }
-      res.status(201).json({ status: 201, message });
+      res.status(201).json({ status: 201, data, message });
     }
   } catch (error) {
     res.status(500).json({ status: 500, error: error.message });

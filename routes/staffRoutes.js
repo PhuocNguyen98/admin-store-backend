@@ -1,10 +1,12 @@
 const express = require("express");
+const router = express.Router();
 const {
   getStaff,
   createStaff,
   updateStaffById,
 } = require("../controllers/staffController");
-const router = express.Router();
+
+const { getStaffRole } = require("../controllers/staffRoleController");
 
 // const uploadCloud = require("../cloudinary/cloudinary");
 // const upload = uploadCloud("supplier");
@@ -12,5 +14,8 @@ const router = express.Router();
 router.get("/", getStaff);
 router.post("/", createStaff);
 router.put("/:id", updateStaffById);
+
+//Role
+router.get("/role", getStaffRole);
 
 module.exports = router;
