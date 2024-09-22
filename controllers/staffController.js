@@ -1,6 +1,5 @@
 const mysql = require("mysql2/promise");
 const config = require("../db/config");
-const pool = mysql.createPool(config.db);
 const helper = require("../utils/helper");
 const cloudinary = require("../cloudinary/config");
 const {
@@ -29,7 +28,7 @@ const getStaff = async (req, res) => {
     const offset = helper.getOffSet(page, limit);
     try {
       let queryString = {
-        fields: `staff.id,staff.username,staff.email,staff.role_id, staff.password,staff.is_active,staff.created_at, staff_role.name as role`,
+        fields: `staff.id,staff.username,staff.email,staff.role_id, staff.password,staff.is_status,staff.created_at, staff_role.name as role`,
         tableName: "staff",
         joinTable: `inner join staff_role on staff.role_id = staff_role.id `,
         order_by: order ? `staff.${order}` : "staff.id",
@@ -71,7 +70,29 @@ const getStaff = async (req, res) => {
   }
 };
 
-const createStaff = async (req, res) => {
+const getStaffById = async (req, res) => {
+  const { id } = req.params;
+  if (id) {
+    try {
+      const result = await checkRecordExists("staff", "id", id);
+      if (Object.keys(result).length > 0) {
+        const rows = await getRecordById("staff", id);
+        const data = helper.emptyOrRows(rows);
+        res.status(200).json({ status: 200, data });
+      } else {
+        res
+          .status(500)
+          .json({ status: 500, message: `Error while getting staff` });
+      }
+    } catch (error) {
+      res.status(500).json({ status: 500, message: error.message });
+    }
+  } else {
+    res.status(500).json({ status: 500, message: "Id fields empty" });
+  }
+};
+
+const createStaffAccount = async (req, res) => {
   let {
     staffUsername: username,
     staffPassword: password,
@@ -104,13 +125,12 @@ const createStaff = async (req, res) => {
         .status(409)
         .json({ status: 409, message: "Username staff already exists" });
     } else {
-      let data;
       const result = await insertRecord("staff", newStaff);
+      let data;
       if (result.affectedRows) {
         let queryString = {
-          fields: `staff.username, staff.email,staff.role_id, staff_role.name as role`,
+          fields: `staff.username, staff.email,staff.role_id, staff.is_status`,
           tableName: "staff",
-          joinTable: `inner join staff_role on staff.role_id = staff_role.id `,
           order_by: "staff.id",
           conditions: `staff.id =${result.insertId} `,
         };
@@ -124,40 +144,68 @@ const createStaff = async (req, res) => {
   }
 };
 
-const updateStaffById = async (req, res) => {
-  let { id } = req.params;
-  let { staffRole: role_id } = req.body;
+const updateStaffAccountById = async (req, res) => {
   let message = "Error in updating Staff";
-  if (id) {
-    try {
-      const staffAlreadyExists = checkRecordExists("staff", "id", id);
-      if (staffAlreadyExists) {
-        const result = await updateRecordById("staff", { role_id }, id);
-        if (result.affectedRows) {
-          message = "Staff updated successfully";
+  let isUpdate = 0;
+
+  const formData = req.body.formList;
+  if (formData.length > 0) {
+    for (let i = 0; i < formData.length; i++) {
+      if (formData[i]?.id) {
+        try {
+          const [staff] = await getRecordById("staff", formData[i].id);
+          if (Object.keys(staff).length > 0) {
+            let newStaff = {};
+
+            if (staff.role_id !== formData[i]?.role_id) {
+              newStaff = { role_id: formData[i]?.role_id };
+            }
+
+            if (staff.is_status !== formData[i]?.is_status) {
+              newStaff = { ...newStaff, is_status: formData[i]?.is_status };
+            }
+
+            if (Object.keys(newStaff).length > 0) {
+              const result = await updateRecordById(
+                "staff",
+                newStaff,
+                formData[i].id
+              );
+              if (result.affectedRows) {
+                isUpdate += 1;
+              }
+            }
+          } else {
+            res.status(409).json({ status: 409, message: "Staff not exists" });
+            return;
+          }
+        } catch (error) {
+          res.status(500).json({
+            status: 500,
+            message: "Error in updating Staff",
+          });
         }
-        res.status(200).json({ status: 200, message });
-      } else {
-        res.status(409).json({ status: 409, message: "Staff already exists" });
-        return;
       }
-    } catch (error) {
-      res.status(500).json({
-        status: 500,
-        message: error.message,
-      });
+    }
+
+    if (isUpdate > 0) {
+      message = "Staff updated successfully";
+      res.status(200).json({ status: 200, message });
+    } else {
+      message = "No changes detected";
+      res.status(200).json({ status: 200, message, flag: true });
     }
   } else {
     res.status(400).json({
       status: 400,
-      message: "Role fields cannot be empty!",
+      message: "Error in updating Staff",
     });
-    return;
   }
 };
 
 module.exports = {
   getStaff,
-  createStaff,
-  updateStaffById,
+  getStaffById,
+  createStaffAccount,
+  updateStaffAccountById,
 };
