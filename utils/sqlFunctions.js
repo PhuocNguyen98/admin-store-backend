@@ -151,10 +151,10 @@ async function updateRecordById(table, value, id) {
   }
 }
 
-async function getRole(roleId) {
+async function getRoleById(id) {
   try {
     const [results] = await pool.query(
-      `SELECT name as role_name FROM staff_role WHERE id = ${roleId}`
+      `SELECT name as role_name FROM staff_role WHERE id = ${id}`
     );
     return results[0].role_name;
   } catch (err) {
@@ -165,7 +165,7 @@ async function getRole(roleId) {
 module.exports = {
   checkRecordExists,
   insertRecord,
-  getRole,
+  getRoleById,
   getRecord,
   getTotalRecord,
   getRecordById,

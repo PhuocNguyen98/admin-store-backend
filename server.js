@@ -18,7 +18,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use("/", authRoutes);
+app.use("/v1/api", authRoutes);
+
 app.use("/category", categoryRoutes);
 app.use("/supplier", supplierRoutes);
 app.use("/discount", discountRoutes);
