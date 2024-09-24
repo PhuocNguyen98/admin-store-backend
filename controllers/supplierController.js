@@ -1,168 +1,125 @@
-const mysql = require("mysql2/promise");
-const config = require("../db/config");
-const pool = mysql.createPool(config.db);
 const helper = require("../utils/helper");
-const cloudinary = require("../cloudinary/config");
 const {
-  getTotalRecord,
-  getRecord,
-  getRecordById,
-  insertRecord,
-  updateRecordById,
-  getAllRecord,
-} = require("../utils/sqlFunctions");
-const { query } = require("express");
+  getSupplierServices,
+  getAllSupplierServices,
+  createSupplierServices,
+  getSupplierByIdServices,
+  updateSupplierByIdServices,
+  quickUpdateSupplierServices,
+} = require("../services/supplierServices");
 
 const getSupplier = async (req, res) => {
-  const params = req.query;
-  if (Object.keys(params).length > 0) {
-    const {
-      search = "",
-      order,
-      sort,
-      page = 1,
-      limit = config.listPerPage,
-    } = params;
-    const offset = helper.getOffSet(page, limit);
-    try {
-      const rows = await getRecord(
-        "*",
-        "product_supplier",
-        order,
-        sort,
-        limit,
-        offset,
-        (searchField = "name"),
-        (searchString = search)
-      );
-
-      const totalRows = await getTotalRecord(
-        "product_supplier",
-        "name",
-        search
-      );
-      const totalPage = Math.round(totalRows / limit, 0);
-
-      const data = helper.emptyOrRows(rows);
-      const pagination = {
-        rowsPerPage: +limit,
-        totalPage,
-        totalRows,
-      };
-
-      res.status(200).json({ status: 200, data, pagination });
-    } catch (error) {
-      res
-        .status(500)
-        .json({ status: 500, message: `Error while getting supplier` });
-    }
+  const query = req.query;
+  if (!Object.keys(query).length > 0) {
+    const data = await getAllSupplierServices();
+    res.status(200).json({ data });
   } else {
-    try {
-      const rows = await getAllRecord(
-        "id as value , name as title ",
-        "product_supplier"
-      );
-      const data = helper.emptyOrRows(rows);
-      res.status(200).json({ status: 200, data });
-    } catch (error) {
-      res
-        .status(500)
-        .json({ status: 500, message: `Error while getting supplier` });
-    }
+    const data = await getSupplierServices(query);
+    res.status(200).json({ data });
   }
 };
 
 const getSupplierById = async (req, res) => {
-  const id = req.params.id;
-  if (id) {
-    const rows = await getRecordById("product_supplier", id);
-    const data = helper.emptyOrRows(rows);
-
-    res.status(200).json({ status: 200, data });
+  const id = req.params?.id;
+  if (!id) {
+    res.status(400).json({ status: 400, message: `Invalid information!` });
   } else {
-    res
-      .status(500)
-      .json({ status: 500, message: `Error while getting supplier` });
+    const data = await getSupplierByIdServices(id);
+    res.status(200).json({ data });
   }
 };
 
 const createSupplier = async (req, res) => {
   const { supplierName: name, supplierSlug: slug } = req.body;
-  let newSupplier = {
-    name,
-    slug,
-    created_at: helper.getTimes(),
-  };
-  let message = "Error in creating Supplier";
+  if (!name || !slug) {
+    res.status(400).json({ message: "Name, Slug fields cannot be empty!" });
+  } else {
+    let newSupplier = {
+      name,
+      slug,
+      is_status: 1, // { 0: là ngừng kinh doanh, 1: Đang kinh doanh} => mặc định khi thêm mới sẽ là 1
+      is_display: 0, // { 0: Ẩn, 1: Hiển thị} => mặc định khi thêm mới sẽ là 0
+      created_at: helper.getTimes(),
+    };
 
-  try {
-    if (req.file) {
+    if (req?.file && Object.keys(req.file).length > 0) {
       newSupplier = {
         ...newSupplier,
-        thumbnail: req.file.path,
-        cloudinary_id: req.file.filename,
+        thumbnail: req.file?.path,
+        cloudinary_id: req.file?.filename,
       };
     }
-
-    const result = await insertRecord("product_supplier", newSupplier);
-    if (result.affectedRows) {
-      message = "Supplier created successfully";
-    }
-    res.status(200).json({ status: 200, message });
-  } catch (error) {
-    res.status(500).json({ status: 500, error: error.message });
+    const data = await createSupplierServices(newSupplier);
+    res.status(200).json({ data });
   }
 };
 
 const updateSupplierById = async (req, res) => {
-  const id = req.params.id;
-  let message = "Error in updating Supplier";
+  const id = req.params?.id;
+  if (!id) {
+    res.status(400).json({ status: 400, message: "Invalid information" });
+  } else {
+    const {
+      supplierName: name,
+      supplierSlug: slug,
+      supplierStatus: is_status,
+      supplierDisplay: is_display,
+      supplierImage: thumbnail,
+    } = req.body;
+    if (!name || !slug || !is_status || !is_display) {
+      res.status(400).json({
+        message: "Name, Slug, Status, Display fields cannot be empty!",
+      });
+    } else {
+      let newSupplier = {
+        name,
+        slug,
+        is_status,
+        is_display,
+        updated_at: helper.getTimes(),
+      };
 
-  if (id) {
-    const { supplierName: name, supplierSlug: slug } = req.body;
-    let newSupplier = {
-      name,
-      slug,
-      updated_at: helper.getTimes(),
-    };
-
-    try {
-      if (req.file) {
-        const rows = await getRecordById("product_supplier", id);
-        const supplier = helper.emptyOrRows(rows);
-
-        if (supplier[0].thumbnail && supplier[0].cloudinary_id) {
-          await cloudinary.uploader.destroy(supplier[0].cloudinary_id);
-        }
-
+      // Image deleted
+      if (thumbnail === "" || thumbnail === undefined || thumbnail === null) {
         newSupplier = {
           ...newSupplier,
-          thumbnail: req.file.path,
-          cloudinary_id: req.file.filename,
+          thumbnail: "",
+          cloudinary_id: "",
+        };
+      } else {
+        // Keep image old
+        newSupplier = {
+          ...newSupplier,
+          thumbnail,
         };
       }
 
-      const result = await updateRecordById(
-        "product_supplier",
-        newSupplier,
-        id
-      );
-      if (result.affectedRows) {
-        message = "Supplier updated successfully";
+      if (req.file && Object.keys(req.file).length > 0) {
+        Object.assign(newSupplier, {
+          thumbnail: req.file?.path,
+          cloudinary_id: req.file?.filename,
+        });
       }
-      res.status(200).json({ status: 200, message });
-    } catch (error) {
-      res.status(500).json({ status: 500, message });
+
+      const data = await updateSupplierByIdServices(id, newSupplier);
+      res.status(200).json({ data });
     }
-  } else {
-    message = "Can not found supplier";
-    res.status(500).json({ status: 500, message });
   }
 };
 
+const quickUpdateSupplier = async (req, res) => {
+  const formList = req.body?.formList;
+  if (!formList.length > 0) {
+    res.status(400).json({ status: 400, message: "Invalid information" });
+  } else {
+    const data = await quickUpdateSupplierServices(formList);
+    res.status(200).json({ data });
+  }
+};
 module.exports = {
   getSupplier,
   getSupplierById,
   createSupplier,
   updateSupplierById,
+  quickUpdateSupplier,
 };

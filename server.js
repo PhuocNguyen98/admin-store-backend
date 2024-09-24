@@ -21,8 +21,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use("/v1/api", authRoutes);
 app.use("/v1/api/category", categoryRoutes);
+app.use("/v1/api/supplier", supplierRoutes);
 
-app.use("/supplier", supplierRoutes);
 app.use("/discount", discountRoutes);
 app.use("/product", productRoutes);
 app.use("/staff", staffRoutes);
