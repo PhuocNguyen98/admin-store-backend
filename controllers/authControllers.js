@@ -1,7 +1,7 @@
 const {
   loginServices,
   getAccountServicesById,
-} = require("../servives/authServices");
+} = require("../services/authServices");
 
 const login = async (req, res) => {
   const { username, password } = req.body;

@@ -1,166 +1,103 @@
-const mysql = require("mysql2/promise");
 const helper = require("../utils/helper");
-const config = require("../db/config");
-const cloudinary = require("../cloudinary/config");
 const {
-  getTotalRecord,
-  getRecord,
-  getRecordById,
-  insertRecord,
-  updateRecordById,
-  getAllRecord,
-} = require("../utils/sqlFunctions");
+  getCategoryServices,
+  getAllCategoryServices,
+  getCategoryByIdServices,
+  createCategoryServices,
+  updateCategoryByIdServices,
+  quickUpdateCategoryServices,
+} = require("../services/categoryServices");
 
 const getCategory = async (req, res) => {
-  const params = req.query;
-  if (Object.keys(params).length > 0) {
-    const {
-      search = "",
-      order,
-      sort,
-      page = 1,
-      limit = config.listPerPage,
-    } = params;
-    const offset = helper.getOffSet(page, limit);
-
-    try {
-      const rows = await getRecord(
-        "*",
-        "product_category",
-        order,
-        sort,
-        limit,
-        offset,
-        (searchField = "name"),
-        (searchString = search)
-      );
-
-      const totalRows = await getTotalRecord(
-        "product_category",
-        "name",
-        search
-      );
-      const totalPage = Math.round(totalRows / limit, 0);
-
-      const data = helper.emptyOrRows(rows);
-      const pagination = {
-        rowsPerPage: +limit,
-        totalPage,
-        totalRows,
-      };
-
-      res.status(200).json({ status: 200, data, pagination });
-    } catch (error) {
-      res
-        .status(500)
-        .json({ status: 500, message: `Error while getting category` });
-    }
+  const query = req.query;
+  if (!Object.keys(query).length > 0) {
+    const data = await getAllCategoryServices();
+    res.status(200).json({ data });
   } else {
-    try {
-      const rows = await getAllRecord(
-        "id as value , name as title ",
-        "product_category"
-      );
-      const data = helper.emptyOrRows(rows);
-      res.status(200).json({ status: 200, data });
-    } catch (error) {
-      res
-        .status(500)
-        .json({ status: 500, message: `Error while getting category` });
-    }
+    const data = await getCategoryServices(query);
+    res.status(200).json({ data });
   }
 };
 
 const getCategoryById = async (req, res) => {
-  const id = req.params.id;
-  if (id) {
-    const rows = await getRecordById("product_category", id);
-    const data = helper.emptyOrRows(rows);
-
-    res.status(200).json({ status: 200, data });
+  const id = req.params?.id;
+  if (!id) {
+    res.status(400).json({ status: 400, message: `Invalid information!` });
   } else {
-    res
-      .status(500)
-      .json({ status: 500, message: `Error while getting category` });
+    const data = await getCategoryByIdServices(id);
+    res.status(200).json({ data });
   }
 };
 
 const createCategory = async (req, res) => {
   const { categoryName: name, categorySlug: slug } = req.body;
-  let newCategory = {
-    name,
-    slug,
-    created_at: helper.getTimes(),
-  };
-  let message = "Error in creating Category";
+  if (!name || !slug) {
+    res.status(400).json({ message: "Name, Slug fields cannot be empty!" });
+  } else {
+    let newCategory = {
+      name,
+      slug,
+      is_status: 1, // { 0: là ngừng kinh doanh, 1: Đang kinh doanh} => mặc định khi thêm mới sẽ là 1
+      is_display: 0, // { 0: Ẩn, 1: Hiển thị} => mặc định khi thêm mới sẽ là 0
+      created_at: helper.getTimes(),
+    };
 
-  try {
-    if (req.file) {
+    if (req?.file && Object.keys(req.file).length > 0) {
       newCategory = {
         ...newCategory,
-        thumbnail: req.file.path,
-        cloudinary_id: req.file.filename,
+        thumbnail: req.file?.path,
+        cloudinary_id: req.file?.filename,
       };
     }
-
-    const result = await insertRecord("product_category", newCategory);
-    if (result.affectedRows) {
-      message = "Category created successfully";
-    }
-    res.status(200).json({ status: 200, message });
-  } catch (error) {
-    res.status(500).json({ status: 500, error: error.message });
+    const data = await createCategoryServices(newCategory);
+    res.status(200).json({ data });
   }
 };
 
 const updateCategoryById = async (req, res) => {
-  const id = req.params.id;
-  let message = "Error in updating Category";
-
-  if (id) {
+  const id = req.params?.id;
+  if (!id) {
+    res.status(400).json({ status: 400, message: "Invalid information" });
+  } else {
     const {
       categoryName: name,
       categorySlug: slug,
       categoryStatus: is_status,
+      categoryDisplay: is_display,
     } = req.body;
-    let newCategory = {
-      name,
-      slug,
-      is_status,
-      updated_at: helper.getTimes(),
-    };
+    if (!name || !slug || !is_status || !is_display) {
+      res.status(400).json({
+        message: "Name, Slug, Status, Display fields cannot be empty!",
+      });
+    } else {
+      let newCategory = {
+        name,
+        slug,
+        is_status,
+        is_display,
+        updated_at: helper.getTimes(),
+      };
 
-    try {
-      if (req.file) {
-        const rows = await getRecordById("product_category", id);
-        const category = helper.emptyOrRows(rows);
-
-        if (category[0].thumbnail && category[0].cloudinary_id) {
-          await cloudinary.uploader.destroy(category[0].cloudinary_id);
-        }
-
+      if (req.file && Object.keys(req.file).length > 0) {
         newCategory = {
           ...newCategory,
-          thumbnail: req.file.path,
-          cloudinary_id: req.file.filename,
+          thumbnail: req.file?.path,
+          cloudinary_id: req.file?.filename,
         };
       }
-
-      const result = await updateRecordById(
-        "product_category",
-        newCategory,
-        id
-      );
-      if (result.affectedRows) {
-        message = "Category updated successfully";
-      }
-      res.status(200).json({ status: 200, message });
-    } catch (error) {
-      res.status(500).json({ status: 500, message });
+      const data = await updateCategoryByIdServices(id, newCategory);
+      res.status(200).json({ data });
     }
+  }
+};
+
+const quickUpdateCategory = async (req, res) => {
+  const formList = req.body?.formList;
+  if (!formList.length > 0) {
+    res.status(400).json({ status: 400, message: "Invalid information" });
   } else {
-    message = "Can not found category";
-    res.status(500).json({ status: 500, message });
+    const data = await quickUpdateCategoryServices(formList);
+    res.status(200).json({ data });
   }
 };
 
@@ -169,4 +106,5 @@ module.exports = {
   getCategoryById,
   createCategory,
   updateCategoryById,
+  quickUpdateCategory,
 };
