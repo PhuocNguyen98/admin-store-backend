@@ -85,7 +85,7 @@ const getCategoryByIdServices = async (id) => {
       return { status: 404, message: "Category not exist!" };
     } else {
       const rows = await getRecordByIdV2({
-        fields: "id, name, slug, thumbnail, is_status",
+        fields: "id, name, slug, thumbnail, is_status, is_display",
         table: TABLE_NAME,
         id,
       });
