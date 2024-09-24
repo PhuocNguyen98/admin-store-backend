@@ -64,6 +64,7 @@ const updateCategoryById = async (req, res) => {
       categorySlug: slug,
       categoryStatus: is_status,
       categoryDisplay: is_display,
+      categoryImage: thumbnail,
     } = req.body;
     if (!name || !slug || !is_status || !is_display) {
       res.status(400).json({
@@ -78,13 +79,28 @@ const updateCategoryById = async (req, res) => {
         updated_at: helper.getTimes(),
       };
 
-      if (req.file && Object.keys(req.file).length > 0) {
+      // Image deleted
+      if (thumbnail === "" || thumbnail === undefined || thumbnail === null) {
         newCategory = {
           ...newCategory,
-          thumbnail: req.file?.path,
-          cloudinary_id: req.file?.filename,
+          thumbnail: "",
+          cloudinary_id: "",
+        };
+      } else {
+        // Keep image old
+        newCategory = {
+          ...newCategory,
+          thumbnail,
         };
       }
+
+      if (req.file && Object.keys(req.file).length > 0) {
+        Object.assign(newCategory, {
+          thumbnail: req.file?.path,
+          cloudinary_id: req.file?.filename,
+        });
+      }
+
       const data = await updateCategoryByIdServices(id, newCategory);
       res.status(200).json({ data });
     }
