@@ -23,8 +23,8 @@ app.use("/v1/api", authRoutes);
 app.use("/v1/api/category", categoryRoutes);
 app.use("/v1/api/supplier", supplierRoutes);
 app.use("/v1/api/discount", discountRoutes);
+app.use("/v1/api/product", productRoutes);
 
-app.use("/product", productRoutes);
 app.use("/staff", staffRoutes);
 
 app.listen(port, () => {

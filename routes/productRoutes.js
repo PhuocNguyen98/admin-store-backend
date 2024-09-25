@@ -1,4 +1,5 @@
 const express = require("express");
+const router = express.Router();
 const {
   getProduct,
   createProduct,
@@ -6,7 +7,6 @@ const {
   updateProductById,
   quickUpdateProduct,
 } = require("../controllers/productController");
-const router = express.Router();
 
 const uploadCloud = require("../cloudinary/cloudinary");
 const upload = uploadCloud("product", true);
