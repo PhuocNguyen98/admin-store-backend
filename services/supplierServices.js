@@ -139,14 +139,16 @@ const updateSupplierByIdServices = async (id, newSupplier) => {
         message: "Supplier not exist!",
       };
     } else {
-      if (newSupplier.thumbnail === "") {
-        await cloudinary.uploader.destroy(supplier?.cloudinary_id);
-      } else {
-        if (
-          supplier?.thumbnail &&
-          newSupplier.thumbnail !== supplier?.thumbnail
-        ) {
+      if (supplier?.cloudinary_id) {
+        if (newSupplier.thumbnail === "") {
           await cloudinary.uploader.destroy(supplier?.cloudinary_id);
+        } else {
+          if (
+            supplier?.thumbnail &&
+            newSupplier.thumbnail !== supplier?.thumbnail
+          ) {
+            await cloudinary.uploader.destroy(supplier?.cloudinary_id);
+          }
         }
       }
 

@@ -138,14 +138,16 @@ const updateCategoryByIdServices = async (id, newCategory) => {
         message: "Category not exist!",
       };
     } else {
-      if (newCategory.thumbnail === "") {
-        await cloudinary.uploader.destroy(category?.cloudinary_id);
-      } else {
-        if (
-          category?.thumbnail &&
-          newCategory.thumbnail !== category?.thumbnail
-        ) {
+      if (category?.cloudinary_id) {
+        if (newCategory.thumbnail === "") {
           await cloudinary.uploader.destroy(category?.cloudinary_id);
+        } else {
+          if (
+            category?.thumbnail &&
+            newCategory.thumbnail !== category?.thumbnail
+          ) {
+            await cloudinary.uploader.destroy(category?.cloudinary_id);
+          }
         }
       }
 
