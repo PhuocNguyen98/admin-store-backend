@@ -1,85 +1,32 @@
 const helper = require("../utils/helper");
-const config = require("../db/config");
-const cloudinary = require("../cloudinary/config");
-const {
-  getTotalRecord,
-  getRecord,
-  getRecordById,
-  insertRecord,
-  updateRecordById,
-  checkRecordExists,
-  getAllRecord,
-} = require("../utils/sqlFunctions");
 const dayjs = require("dayjs");
+const {
+  getAllDiscountServices,
+  getDiscountServices,
+  getDiscountByIdServices,
+  createDiscountServices,
+  updateDiscountByIdServices,
+  quickUpdateDiscountServices,
+} = require("../services/discountServices");
 
 const getDiscount = async (req, res) => {
-  const params = req.query;
-  if (Object.keys(params).length > 0) {
-    const {
-      search = "",
-      order,
-      sort,
-      page = 1,
-      limit = config.listPerPage,
-    } = params;
-    const offset = helper.getOffSet(page, limit);
-
-    try {
-      const rows = await getRecord(
-        "*",
-        "discount",
-        order,
-        sort,
-        limit,
-        offset,
-        (searchField = "name"),
-        (searchString = search)
-      );
-
-      const totalRows = await getTotalRecord("discount", "name", search);
-      const totalPage = Math.round(totalRows / limit, 0);
-
-      const data = helper.emptyOrRows(rows);
-      const pagination = {
-        rowsPerPage: +limit,
-        totalPage,
-        totalRows,
-      };
-
-      res.status(200).json({ status: 200, data, pagination });
-    } catch (error) {
-      res
-        .status(500)
-        .json({ status: 500, message: `Error while getting discount` });
-    }
+  const query = req.query;
+  if (!Object.keys(query).length > 0) {
+    const data = await getAllDiscountServices();
+    res.status(200).json({ data });
   } else {
-    try {
-      const rows = await getAllRecord(
-        "id as value , CONCAT (name,' - giảm tối đa ', percent, '%') as title ",
-        "discount",
-        "is_status = 1"
-      );
-      const data = helper.emptyOrRows(rows);
-      res.status(200).json({ status: 200, data });
-    } catch (error) {
-      res
-        .status(500)
-        .json({ status: 500, message: `Error while getting discount` });
-    }
+    const data = await getDiscountServices(query);
+    res.status(200).json({ data });
   }
 };
 
 const getDiscountById = async (req, res) => {
-  const id = req.params.id;
-  if (id) {
-    const rows = await getRecordById("discount", id);
-    const data = helper.emptyOrRows(rows);
-
-    res.status(200).json({ status: 200, data });
+  const id = req.params?.id;
+  if (!id) {
+    res.status(400).json({ status: 400, message: `Invalid information!` });
   } else {
-    res
-      .status(500)
-      .json({ status: 500, message: `Error while getting discount` });
+    const data = await getDiscountByIdServices(id);
+    res.status(200).json({ data });
   }
 };
 
@@ -92,42 +39,37 @@ const createDiscount = async (req, res) => {
     discountEndTime: end_time,
     discountDescription: description,
   } = req.body;
+  if (!name || !slug) {
+    res.status(400).json({ message: "Name, Slug fields cannot be empty!" });
+  } else {
+    let newDiscount = {
+      name,
+      slug,
+      percent,
+      description,
+      start_time: dayjs(start_time).format("DD-MM-YYYY"),
+      end_time: dayjs(end_time).format("DD-MM-YYYY"),
+      is_status: 0, // { 0: chưa áp dụng, 1: đang áp dụng} => mặc định khi thêm mới sẽ là 0
+      created_at: helper.getTimes(),
+    };
 
-  let newDiscount = {
-    name,
-    slug,
-    percent,
-    start_time: dayjs(start_time).format("DD-MM-YYYY"),
-    end_time: dayjs(end_time).format("DD-MM-YYYY"),
-    description,
-    created_at: helper.getTimes(),
-  };
-  let message = "Error in creating Discount";
-
-  try {
-    if (req.file) {
+    if (req?.file && Object.keys(req.file).length > 0) {
       newDiscount = {
         ...newDiscount,
-        thumbnail: req.file.path,
-        cloudinary_id: req.file.filename,
+        thumbnail: req.file?.path,
+        cloudinary_id: req.file?.filename,
       };
     }
-
-    const result = await insertRecord("discount", newDiscount);
-    if (result.affectedRows) {
-      message = "Discount created successfully";
-    }
-    res.status(200).json({ status: 200, message });
-  } catch (error) {
-    res.status(500).json({ status: 500, error: error.message });
+    const data = await createDiscountServices(newDiscount);
+    res.status(200).json({ data });
   }
 };
 
 const updateDiscountById = async (req, res) => {
-  const id = req.params.id;
-  let message = "Error in updating Discount";
-
-  if (id) {
+  const id = req.params?.id;
+  if (!id) {
+    res.status(400).json({ status: 400, message: "Invalid information" });
+  } else {
     const {
       discountName: name,
       discountSlug: slug,
@@ -135,96 +77,60 @@ const updateDiscountById = async (req, res) => {
       discountStartTime: start_time,
       discountEndTime: end_time,
       discountDescription: description,
+      discountImage: thumbnail,
+      discountStatus: is_status,
     } = req.body;
-    let newDiscount = {
-      name,
-      slug,
-      percent,
-      start_time: dayjs(start_time).format("DD-MM-YYYY"),
-      end_time: dayjs(end_time).format("DD-MM-YYYY"),
-      description,
-      updated_at: helper.getTimes(),
-    };
+    if (!name || !slug || !is_status) {
+      res.status(400).json({
+        message: "Name, Slug, Status fields cannot be empty!",
+      });
+    } else {
+      let newDiscount = {
+        name,
+        slug,
+        percent,
+        start_time: dayjs(start_time).format("DD-MM-YYYY"),
+        end_time: dayjs(end_time).format("DD-MM-YYYY"),
+        is_status,
+        description,
+        updated_at: helper.getTimes(),
+      };
 
-    try {
-      if (req.file) {
-        const rows = await getRecordById("discount", id);
-        const discount = helper.emptyOrRows(rows);
-
-        if (discount[0].thumbnail && discount[0].cloudinary_id) {
-          await cloudinary.uploader.destroy(discount[0].cloudinary_id);
-        }
-
+      // Image deleted
+      if (thumbnail === "" || thumbnail === undefined || thumbnail === null) {
         newDiscount = {
           ...newDiscount,
-          thumbnail: req.file.path,
-          cloudinary_id: req.file.filename,
+          thumbnail: "",
+          cloudinary_id: "",
+        };
+      } else {
+        // Keep image old
+        newDiscount = {
+          ...newDiscount,
+          thumbnail,
         };
       }
 
-      const result = await updateRecordById("discount", newDiscount, id);
-      if (result.affectedRows) {
-        message = "Discount updated successfully";
+      if (req.file && Object.keys(req.file).length > 0) {
+        Object.assign(newDiscount, {
+          thumbnail: req.file?.path,
+          cloudinary_id: req.file?.filename,
+        });
       }
-      res.status(200).json({ status: 200, message });
-    } catch (error) {
-      res.status(500).json({ status: 500, message });
+
+      const data = await updateDiscountByIdServices(id, newDiscount);
+      res.status(200).json({ data });
     }
-  } else {
-    message = "Can not found discount";
-    res.status(500).json({ status: 500, message });
   }
 };
 
-const updateDiscountStatusById = async (req, res) => {
-  const data = req.body?.formList;
-  if (data.length > 0) {
-    let message = "Error in updating status Discount";
-    let isUpdate = 0;
-
-    for (let i = 0; i < data.length; i++) {
-      let is_status = data[i]?.is_status;
-      let id = data[i]?.id;
-      try {
-        const discount = await checkRecordExists("discount", "id", id);
-        // Check discount exist
-        if (Object.keys(discount).length > 0) {
-          // Check is_status old AND is_status new
-          if (discount.is_status === +is_status) {
-            continue;
-          } else {
-            let discountStatus = {
-              is_status,
-            };
-            const result = await updateRecordById(
-              "discount",
-              discountStatus,
-              id
-            );
-            if (result.affectedRows) {
-              isUpdate = isUpdate + 1;
-            }
-          }
-        } else {
-          message = "Discount not exist";
-          res.status(500).json({ status: 500, message });
-          break;
-        }
-      } catch (error) {
-        res.status(500).json({ status: 500, error: error.message });
-      }
-    }
-
-    if (isUpdate > 0) {
-      message = "Discount updated successfully";
-      res.status(200).json({ status: 200, message });
-    } else {
-      message = "No changes detected";
-      res.status(200).json({ status: 200, message });
-    }
+const quickUpdateDiscount = async (req, res) => {
+  const formList = req.body?.formList;
+  if (!formList.length > 0) {
+    res.status(400).json({ status: 400, message: "Invalid information" });
   } else {
-    message = "Error while update status discount";
-    res.status(500).json({ status: 500, message });
+    const data = await quickUpdateDiscountServices(formList);
+    res.status(200).json({ data });
   }
 };
 
@@ -233,5 +139,5 @@ module.exports = {
   getDiscountById,
   createDiscount,
   updateDiscountById,
-  updateDiscountStatusById,
+  quickUpdateDiscount,
 };
