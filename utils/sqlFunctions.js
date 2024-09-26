@@ -135,6 +135,7 @@ async function getRecordV2({
   limit = config.listPerPage,
   offset = 0,
   searchColumn,
+  searchMultipleColumn = [],
   searchString,
 }) {
   try {
@@ -146,10 +147,22 @@ async function getRecordV2({
       queryString += ` WHERE ${conditions}`;
       if (searchColumn && searchString) {
         queryString += ` AND ${searchColumn} LIKE '%${searchString}%' `;
+
+        if (searchMultipleColumn.length > 0) {
+          searchMultipleColumn.forEach((column) => {
+            queryString += `OR ${column} LIKE '%${searchString}%' `;
+          });
+        }
       }
     } else {
       if (searchColumn && searchString) {
         queryString += ` WHERE ${searchColumn} LIKE '%${searchString}%' `;
+
+        if (searchMultipleColumn.length > 0) {
+          searchMultipleColumn.forEach((column) => {
+            queryString += `OR ${column} LIKE '%${searchString}%' `;
+          });
+        }
       }
     }
 
@@ -163,9 +176,12 @@ async function getRecordV2({
   }
 }
 
-async function getAllRecordV2({ fields, table, conditions }) {
+async function getAllRecordV2({ fields, table, joinTable, conditions }) {
   try {
     let queryString = `SELECT ${fields} FROM ${table}`;
+    if (joinTable) {
+      queryString += ` ${joinTable}`;
+    }
     if (conditions) {
       queryString += ` WHERE ${conditions}`;
     }
@@ -181,6 +197,7 @@ async function getTotalRecordV2({
   joinTable,
   conditions,
   searchColumn,
+  searchMultipleColumn = [],
   searchString,
 }) {
   try {
@@ -193,10 +210,22 @@ async function getTotalRecordV2({
       queryString += ` WHERE ${conditions}`;
       if (searchColumn && searchString) {
         queryString += ` AND ${searchColumn} LIKE '%${searchColumn}%'`;
+
+        if (searchMultipleColumn.length > 0) {
+          searchMultipleColumn.forEach((column) => {
+            queryString += `OR ${column} LIKE '%${searchString}%' `;
+          });
+        }
       }
     } else {
       if (searchColumn && searchString) {
         queryString += ` WHERE ${searchColumn} LIKE '%${searchString}%' `;
+
+        if (searchMultipleColumn.length > 0) {
+          searchMultipleColumn.forEach((column) => {
+            queryString += `OR ${column} LIKE '%${searchString}%' `;
+          });
+        }
       }
     }
 
