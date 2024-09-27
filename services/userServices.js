@@ -1,5 +1,6 @@
 const TABLE_NAME = "staff";
 const helper = require("../utils/helper");
+const bcrypt = require("bcryptjs");
 const cloudinary = require("../cloudinary/config");
 const {
   getRecordV2,
@@ -48,6 +49,7 @@ const updateUserProfileServices = async (id, dataUser) => {
       if (user?.cloudinary_id) {
         if (dataUser.avatar === "") {
           await cloudinary.uploader.destroy(user?.cloudinary_id);
+          dataUser = { ...dataUser, cloudinary_id: "" };
         } else {
           if (dataUser.avatar !== user?.avatar) {
             await cloudinary.uploader.destroy(user?.cloudinary_id);
@@ -78,7 +80,63 @@ const updateUserProfileServices = async (id, dataUser) => {
   }
 };
 
+const changeUserPasswordServices = async (staffId, dataPassword) => {
+  try {
+    const staff = await checkRecordExistsV2({
+      table: TABLE_NAME,
+      column: "staff_id",
+      value: staffId,
+    });
+
+    if (!staff) {
+      return { status: 404, message: "User not exist!" };
+    } else {
+      const passwordMatch = await bcrypt.compare(
+        dataPassword.passwordOld,
+        staff.password
+      );
+      if (!passwordMatch) {
+        return {
+          status: 401,
+          message: "Password old incorrect, please check again.",
+        };
+      } else {
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(
+          dataPassword.passwordNew,
+          salt
+        );
+        const newPassword = {
+          password: hashedPassword,
+          updated_at: helper.getTimes(),
+        };
+
+        const result = await updateRecordByIdV2({
+          table: TABLE_NAME,
+          record: newPassword,
+          id: staff.id,
+        });
+
+        if (result.affectedRows) {
+          return {
+            status: 200,
+            message: "Changed password successfully",
+          };
+        } else {
+          return {
+            status: 500,
+            message: "Error in changing password",
+          };
+        }
+      }
+    }
+  } catch (error) {
+    return { message: "Error while changing password" };
+  }
+};
+
 module.exports = {
   getUserProfileByIdServices,
   updateUserProfileServices,
+  changeUserPasswordServices,
 };

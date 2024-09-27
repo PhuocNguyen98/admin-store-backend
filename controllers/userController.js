@@ -3,6 +3,7 @@ const helper = require("../utils/helper");
 const {
   getUserProfileByIdServices,
   updateUserProfileServices,
+  changeUserPasswordServices,
 } = require("../services/userServices");
 
 const getUserProfile = async (req, res) => {
@@ -30,6 +31,7 @@ const updateUserProfile = async (req, res) => {
       userEducation: education,
       userInformation: information,
       userBirthday: birthday,
+      userAvatar: avatar,
     } = req.body;
 
     let dataUser = {
@@ -41,6 +43,7 @@ const updateUserProfile = async (req, res) => {
       address,
       education,
       information,
+      avatar: avatar ? avatar : "",
       birthday: birthday ? dayjs(birthday).format("DD-MM-YYYY") : "",
       updated_at: helper.getTimes(),
     };
@@ -58,7 +61,22 @@ const updateUserProfile = async (req, res) => {
   }
 };
 
+const changeUserPassword = async (req, res) => {
+  const staffId = req?.staff?.staffId;
+  if (!staffId) {
+    res.status(400).json({ message: "Invalid information" });
+  } else {
+    const { userPasswordOld: passwordOld, userPasswordNew: passwordNew } =
+      req.body;
+
+    const dataPassword = { passwordOld, passwordNew };
+    const data = await changeUserPasswordServices(staffId, dataPassword);
+    res.status(200).json({ data });
+  }
+};
+
 module.exports = {
   getUserProfile,
   updateUserProfile,
+  changeUserPassword,
 };
