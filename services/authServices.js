@@ -54,14 +54,16 @@ const getAccountServicesById = async (id) => {
     if (staff) {
       return {
         status: 200,
-        account: {
+        data: {
           username: staff.username,
+          avatar: staff.avatar,
         },
+        message: "Login successfully",
       };
     } else {
       return {
         status: 401,
-        message: "Cannot get account info",
+        message: "Cannot get user info",
       };
     }
   } catch (error) {
