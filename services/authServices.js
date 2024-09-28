@@ -1,6 +1,9 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
-const { checkRecordExists } = require("../utils/sqlFunctions");
+const {
+  checkRecordExists,
+  checkRecordExistsV2,
+} = require("../utils/sqlFunctions");
 
 const loginServices = async (username, password) => {
   try {
@@ -58,7 +61,6 @@ const getAccountServicesById = async (id) => {
           username: staff.username,
           avatar: staff.avatar,
         },
-        message: "Login successfully",
       };
     } else {
       return {
@@ -74,7 +76,40 @@ const getAccountServicesById = async (id) => {
   }
 };
 
+const refreshTokenServices = async (id) => {
+  try {
+    const staff = await checkRecordExistsV2({
+      table: "staff",
+      column: "staff_id",
+      value: id,
+    });
+    if (!staff) {
+      return {
+        status: 400,
+        message: `Invalid information!`,
+      };
+    } else {
+      const payload = {
+        staff_id: staff.staff_id,
+      };
+      const refreshToken = jwt.sign(payload, process.env.JWT_SECRET, {
+        expiresIn: Date.now() + 24 * 60 * 60 * 1000,
+      });
+
+      return {
+        status: 200,
+        refreshToken,
+      };
+    }
+  } catch (error) {
+    return {
+      message: error,
+    };
+  }
+};
+
 module.exports = {
   loginServices,
   getAccountServicesById,
+  refreshTokenServices,
 };

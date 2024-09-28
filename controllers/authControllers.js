@@ -1,6 +1,8 @@
+const jwt = require("jsonwebtoken");
 const {
   loginServices,
   getAccountServicesById,
+  refreshTokenServices,
 } = require("../services/authServices");
 
 const login = async (req, res) => {
@@ -31,7 +33,21 @@ const getAccount = async (req, res) => {
   }
 };
 
+const refreshToken = async (req, res) => {
+  const token = req.body?.token;
+  if (!token) {
+    res.status(400).json({ status: 400, message: `Invalid information!` });
+  } else {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET, {
+      ignoreExpiration: true,
+    });
+    const data = await refreshTokenServices(decoded.staff_id);
+    res.status(200).json({ data });
+  }
+};
+
 module.exports = {
   login,
   getAccount,
+  refreshToken,
 };
