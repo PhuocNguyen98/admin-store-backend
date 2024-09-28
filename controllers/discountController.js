@@ -47,6 +47,8 @@ const createDiscount = async (req, res) => {
       slug,
       percent,
       description,
+      thumbnail: "",
+      cloudinary_id: "",
       start_time: dayjs(start_time).format("DD-MM-YYYY"),
       end_time: dayjs(end_time).format("DD-MM-YYYY"),
       is_status: 0, // { 0: chưa áp dụng, 1: đang áp dụng} => mặc định khi thêm mới sẽ là 0

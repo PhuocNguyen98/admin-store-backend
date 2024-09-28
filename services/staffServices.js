@@ -50,6 +50,7 @@ const getStaffServices = async (query) => {
       fields: fields,
       table: TABLE_NAME,
       joinTable,
+      conditions: "staff.role_id = 2",
       sort: sort ? sort : "staff.id",
       order_by: order ? order : "asc",
       limit,

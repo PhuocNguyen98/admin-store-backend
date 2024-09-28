@@ -13,7 +13,14 @@ const loginServices = async (username, password) => {
       if (!staff.password) {
         return {
           status: 400,
-          message: "Username or password incorrect, please check again.",
+          message: "You don't have an account yet",
+        };
+      }
+
+      if (staff.is_status === 0) {
+        return {
+          status: 400,
+          message: "Your account has been deleted, please create a new account",
         };
       }
 
@@ -33,14 +40,14 @@ const loginServices = async (username, password) => {
         };
       } else {
         return {
-          status: 401,
+          status: 400,
           message: "Username or password incorrect, please check again.",
         };
       }
     } else {
       return {
-        status: 401,
-        message: "Username or password incorrect, please check again.",
+        status: 400,
+        message: "You don't have an account yet",
       };
     }
   } catch (error) {

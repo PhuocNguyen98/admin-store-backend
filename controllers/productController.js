@@ -86,7 +86,7 @@ const createProduct = async (req, res) => {
       }
 
       // Lưu dưới dạng key-value, lấy Cloud_id làm key, path làm value
-      if (files["productImages"].length && files["productImages"].length > 0) {
+      if (files["productImages"] && files["productImages"].length > 0) {
         let images = handleArrayImages(files["productImages"]);
         images = JSON.stringify(images);
         newProduct = {

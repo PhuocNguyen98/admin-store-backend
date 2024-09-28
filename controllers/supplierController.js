@@ -37,6 +37,8 @@ const createSupplier = async (req, res) => {
     let newSupplier = {
       name,
       slug,
+      thumbnail: "",
+      cloudinary_id: "",
       is_status: 1, // { 0: là ngừng kinh doanh, 1: Đang kinh doanh} => mặc định khi thêm mới sẽ là 1
       is_display: 0, // { 0: Ẩn, 1: Hiển thị} => mặc định khi thêm mới sẽ là 0
       created_at: helper.getTimes(),
