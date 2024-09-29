@@ -1,15 +1,15 @@
 const express = require("express");
 const router = express.Router();
-const auth = require("../../middleware/auth");
+const auth = require("../middleware/auth");
 const {
   getCategory,
   getCategoryById,
   createCategory,
   updateCategoryById,
   quickUpdateCategory,
-} = require("../../controllers/categoryController");
+} = require("../controllers/categoryController");
 
-const uploadCloud = require("../../cloudinary/cloudinary");
+const uploadCloud = require("../cloudinary/cloudinary");
 const upload = uploadCloud("category");
 
 router.all("*", auth);

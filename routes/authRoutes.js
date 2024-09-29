@@ -1,11 +1,11 @@
 const express = require("express");
 const router = express.Router();
-const auth = require("../../middleware/auth");
+const auth = require("../middleware/auth");
 const {
   login,
   getAccount,
   refreshToken,
-} = require("../../controllers/authControllers");
+} = require("../controllers/authControllers");
 
 router.all("*", auth);
 

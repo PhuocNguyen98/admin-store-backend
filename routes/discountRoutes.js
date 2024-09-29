@@ -1,15 +1,15 @@
 const express = require("express");
 const router = express.Router();
-const auth = require("../../middleware/auth");
+const auth = require("../middleware/auth");
 const {
   getDiscount,
   getDiscountById,
   createDiscount,
   updateDiscountById,
   quickUpdateDiscount,
-} = require("../../controllers/discountController");
+} = require("../controllers/discountController");
 
-const uploadCloud = require("../../cloudinary/cloudinary");
+const uploadCloud = require("../cloudinary/cloudinary");
 const upload = uploadCloud("discount");
 
 router.all("*", auth);

@@ -1,12 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const auth = require("../../middleware/auth");
+const auth = require("../middleware/auth");
 const {
   getStaff,
   getStaffById,
   createStaffAccount,
   quickUpdateStaffAccount,
-} = require("../../controllers/staffController");
+} = require("../controllers/staffController");
 
 router.all("*", auth);
 router.get("/", getStaff);

@@ -1,15 +1,15 @@
 const express = require("express");
 const router = express.Router();
-const auth = require("../../middleware/auth");
+const auth = require("../middleware/auth");
 const {
   getSupplier,
   getSupplierById,
   createSupplier,
   updateSupplierById,
   quickUpdateSupplier,
-} = require("../../controllers/supplierController");
+} = require("../controllers/supplierController");
 
-const uploadCloud = require("../../cloudinary/cloudinary");
+const uploadCloud = require("../cloudinary/cloudinary");
 const upload = uploadCloud("supplier");
 
 router.all("*", auth);
