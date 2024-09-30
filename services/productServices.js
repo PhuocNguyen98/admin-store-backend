@@ -70,7 +70,7 @@ const getProductByIdServices = async (id) => {
     if (!product) {
       return { status: 404, message: "Product not exist!" };
     } else {
-      let fields = `id, name, slug, sku, price, thumbnail, images, cloudinary_id,
+      let fields = `id, name, slug, sku, price, inventory, thumbnail, images, cloudinary_id,
           category_id as category, supplier_id as supplier, discount_id as discount,
           specifications, description, is_display, is_status`;
 
