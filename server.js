@@ -5,6 +5,7 @@ const port = process.env.PORT;
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const app = express();
+const database = require("./db/sqlConnection");
 
 //Routes
 const authRoutes = require("./routes/authRoutes");
@@ -29,6 +30,16 @@ app.use("/v1/api/user", userRoutes);
 
 app.get("/", (res, req) => {
   req.json({ message: "Wellcom to backend" });
+});
+
+app.get("/getMysqlStatus", (req, res) => {
+  // Create Route to Check mysql server Active or Not.
+
+  database.ping((err) => {
+    if (err) return res.status(500).send("MySQL Server is Down");
+
+    res.send("MySQL Server is Active");
+  });
 });
 
 app.listen(port, () => {
