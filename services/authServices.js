@@ -1,8 +1,10 @@
+const TABLE_NAME = "staff";
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const {
   checkRecordExists,
   checkRecordExistsV2,
+  updateRecordByIdV2,
 } = require("../utils/sqlFunctions");
 
 const loginServices = async (username, password) => {
@@ -20,7 +22,7 @@ const loginServices = async (username, password) => {
       if (staff.is_status === 0) {
         return {
           status: 400,
-          message: "Your account has been deleted, please create a new account",
+          message: "Your account has been disabled",
         };
       }
 
@@ -34,10 +36,34 @@ const loginServices = async (username, password) => {
           expiresIn: process.env.JWT_EXPIRE,
         });
 
-        return {
-          status: 200,
-          access_token,
-        };
+        const refresh_token = jwt.sign(
+          payload,
+          process.env.JWT_SECRET_REFRESH,
+          {
+            expiresIn: process.env.JWT_EXPIRE_REFRESH,
+          }
+        );
+
+        const result = await updateRecordByIdV2({
+          table: TABLE_NAME,
+          record: { refresh_token },
+          id: staff.id,
+        });
+
+        if (result.affectedRows) {
+          return {
+            status: 200,
+            data: {
+              access_token,
+              refresh_token,
+            },
+          };
+        } else {
+          return {
+            status: 500,
+            message: "Error system",
+          };
+        }
       } else {
         return {
           status: 400,
@@ -83,7 +109,7 @@ const getAccountServicesById = async (id) => {
   }
 };
 
-const refreshTokenServices = async (id) => {
+const refreshTokenServices = async (id, token, expireTokenRefresh) => {
   try {
     const staff = await checkRecordExistsV2({
       table: "staff",
@@ -96,17 +122,49 @@ const refreshTokenServices = async (id) => {
         message: `Invalid information!`,
       };
     } else {
-      const payload = {
-        staff_id: staff.staff_id,
-      };
-      const refreshToken = jwt.sign(payload, process.env.JWT_SECRET, {
-        expiresIn: Date.now() + 24 * 60 * 60 * 1000,
-      });
+      if (staff.refresh_token === token) {
+        const payload = {
+          staff_id: staff.staff_id,
+        };
 
-      return {
-        status: 200,
-        refreshToken,
-      };
+        const access_token = jwt.sign(payload, process.env.JWT_SECRET, {
+          expiresIn: process.env.JWT_EXPIRE,
+        });
+
+        const refresh_token = jwt.sign(
+          payload,
+          process.env.JWT_SECRET_REFRESH,
+          {
+            expiresIn: expireTokenRefresh,
+          }
+        );
+
+        const result = await updateRecordByIdV2({
+          table: TABLE_NAME,
+          record: { refresh_token },
+          id: staff.id,
+        });
+
+        if (result.affectedRows) {
+          return {
+            status: 200,
+            data: {
+              access_token,
+              refresh_token,
+            },
+          };
+        } else {
+          return {
+            status: 500,
+            message: "Error system",
+          };
+        }
+      } else {
+        return {
+          status: 400,
+          message: `Invalid information!`,
+        };
+      }
     }
   } catch (error) {
     return {

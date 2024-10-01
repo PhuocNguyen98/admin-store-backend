@@ -38,10 +38,12 @@ const refreshToken = async (req, res) => {
   if (!token) {
     res.status(400).json({ status: 400, message: `Invalid information!` });
   } else {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET, {
-      ignoreExpiration: true,
-    });
-    const data = await refreshTokenServices(decoded.staff_id);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_REFRESH);
+    const data = await refreshTokenServices(
+      decoded.staff_id,
+      token,
+      decoded.exp - decoded.iat
+    );
     res.status(200).json({ data });
   }
 };
