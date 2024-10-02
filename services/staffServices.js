@@ -63,6 +63,7 @@ const getStaffServices = async (query) => {
 
     const totalRows = await getTotalRecordV2({
       table: TABLE_NAME,
+      conditions: "staff.role_id = 2",
       searchColumn: "username",
       searchMultipleColumn: ["email"],
       searchString: search,
