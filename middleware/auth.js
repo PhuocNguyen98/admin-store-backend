@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 
 const auth = (req, res, next) => {
-  const allowRoutes = ["/login", "/account/token"];
+  const allowRoutes = ["/login", "/account/token", "/account/logout"];
   if (allowRoutes.find((item) => `/v1/api${item}` === req.originalUrl)) {
     next();
   } else {

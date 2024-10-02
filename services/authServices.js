@@ -173,8 +173,46 @@ const refreshTokenServices = async (id, token, expireTokenRefresh) => {
   }
 };
 
+const logoutServices = async (staffId) => {
+  try {
+    const staff = await checkRecordExistsV2({
+      table: TABLE_NAME,
+      column: "staff_id",
+      value: staffId,
+    });
+
+    if (!staff) {
+      return {
+        status: 400,
+        message: "Invalid information",
+      };
+    } else {
+      const result = await updateRecordByIdV2({
+        table: TABLE_NAME,
+        record: { refresh_token: "" },
+        id: staff.id,
+      });
+
+      if (result.affectedRows) {
+        return {
+          status: 200,
+        };
+      } else {
+        return {
+          status: 500,
+        };
+      }
+    }
+  } catch (error) {
+    return {
+      message: error,
+    };
+  }
+};
+
 module.exports = {
   loginServices,
   getAccountServicesById,
   refreshTokenServices,
+  logoutServices,
 };

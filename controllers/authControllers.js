@@ -3,6 +3,7 @@ const {
   loginServices,
   getAccountServicesById,
   refreshTokenServices,
+  logoutServices,
 } = require("../services/authServices");
 
 const login = async (req, res) => {
@@ -48,8 +49,22 @@ const refreshToken = async (req, res) => {
   }
 };
 
+const logout = async (req, res) => {
+  if (req.headers && req.headers.authorization) {
+    const token = req.headers.authorization.split(" ")[1];
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const data = await logoutServices(decoded.staff_id);
+      res.status(200).json({ data });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  }
+};
+
 module.exports = {
   login,
   getAccount,
   refreshToken,
+  logout,
 };
