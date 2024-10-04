@@ -40,11 +40,7 @@ const refreshToken = async (req, res) => {
     res.status(400).json({ status: 400, message: `Invalid information!` });
   } else {
     const decoded = jwt.verify(token, process.env.JWT_SECRET_REFRESH);
-    const data = await refreshTokenServices(
-      decoded.staff_id,
-      token,
-      decoded.exp - decoded.iat
-    );
+    const data = await refreshTokenServices(decoded.staff_id, token);
     res.status(200).json({ data });
   }
 };

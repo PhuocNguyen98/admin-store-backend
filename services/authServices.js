@@ -109,7 +109,7 @@ const getAccountServicesById = async (id) => {
   }
 };
 
-const refreshTokenServices = async (id, token, expireTokenRefresh) => {
+const refreshTokenServices = async (id, token) => {
   try {
     const staff = await checkRecordExistsV2({
       table: "staff",
@@ -135,7 +135,7 @@ const refreshTokenServices = async (id, token, expireTokenRefresh) => {
           payload,
           process.env.JWT_SECRET_REFRESH,
           {
-            expiresIn: expireTokenRefresh,
+            expiresIn: JWT_EXPIRE_REFRESH,
           }
         );
 
