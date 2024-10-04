@@ -116,6 +116,7 @@ const refreshTokenServices = async (id, token) => {
       column: "staff_id",
       value: id,
     });
+
     if (!staff) {
       return {
         status: 400,
@@ -135,7 +136,7 @@ const refreshTokenServices = async (id, token) => {
           payload,
           process.env.JWT_SECRET_REFRESH,
           {
-            expiresIn: JWT_EXPIRE_REFRESH,
+            expiresIn: process.env.JWT_EXPIRE_REFRESH,
           }
         );
 
